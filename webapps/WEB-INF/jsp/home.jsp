@@ -1,5 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
     pageEncoding="UTF-8"%>
+<%@ tagliburi="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+    
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html>
 <head>
@@ -32,7 +34,15 @@
 					<input class="task_contents">
 				</div>
 				<div class="add_input_btn"> + </div>
-				<div id = "btnAddGoal" class ="submit_btn">확</div>
+				<div id = "btnAddGoal" class ="submit_btn">확인</div>
+				<div>
+					<c:forEach items="${friends}" var="friends">
+						<div>${friends.nickname}</div>
+					</c:forEach>			
+				</div>
+				<section id="showGoal">
+		</div>
+	</section>
 			</form> 
 		</div>
 	</section>

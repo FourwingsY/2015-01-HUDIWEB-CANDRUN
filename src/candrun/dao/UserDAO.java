@@ -44,8 +44,7 @@ public class UserDAO extends JdbcDaoSupport{
 //	user를 가져온다, status = 1이고, 내가 requester일 때, user_has_user에서 responser를 가져온다.
 //	그것으로 user table에서 email로 검색해서 user를 가져온다.
 	public List<User> findFriendsAsRequester(String email) {
-		String sql = "SELECT * from (SELECT * FROM user_has_user INNER JOIN user ON user_has_user.responser = user.email)temp WHERE requester = ? and status = 1"; 
-		
+		String sql = "SELECT * from (SELECT * FROM user_has_user INNER JOIN user ON user_has_user.receiver = user.email)temp WHERE requester = ? and state = 1";		
 		return getJdbcTemplate().query(sql, rowMapper, email);
 	}
 	
