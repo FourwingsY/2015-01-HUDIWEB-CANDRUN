@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.List;
 
 import org.springframework.beans.BeanInstantiationException;
 import org.springframework.jdbc.core.PreparedStatementCreator;
@@ -59,9 +60,10 @@ public class GoalDAO extends JdbcDaoSupport {
 	}
 		
 
-	// 가장 최근 넣은 goal 하나만을 불러온다.
-	public Goal findRecentGoal() {
-		String sql = "SELECT * FROM goal ORDER BY created_date DESC LIMIT 1";
-		return getJdbcTemplate().queryForObject(sql, rowMapper);
+	// 가장 최근 넣은 goal 5개까지 불러온다.
+	public List<Goal> findRecentGoalsByEmail(String email) {
+		String sql = "SELECT * FROM goal WHERE user_email = ? ORDER BY created_date DESC LIMIT 5";
+		return getJdbcTemplate().query(sql, rowMapper, email);
 	}
+
 }     

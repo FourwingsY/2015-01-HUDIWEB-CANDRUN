@@ -33,13 +33,19 @@ INDEX.methods.getElements = function() {
 	elements.signinEmailRep = querySelector("#signin-email-responser");
 	elements.signinPwRep = querySelector("#signin-pw-responser");
 	elements.signinSubmit = querySelector("#signin-form-submit");
+	elements.pubKeyInput = querySelector("#rsaPubKey");
+	elements.signFileInput = querySelector("#input-1-5");
 }
 INDEX.methods.addEvents = function() {
 	var elements = INDEX.elements;
 	var form = INDEX.form;
 
-	elements.signinCloser.addEventListener("click", function() {form.closeModal(elements.signinForm);});
-	elements.signupCloser.addEventListener("click", function() {form.closeModal(elements.signupForm);});
+	elements.signinCloser.addEventListener("click", function() {
+		form.closeModal(elements.signinForm);
+	});
+	elements.signupCloser.addEventListener("click", function() {
+		form.closeModal(elements.signupForm);
+	});
 	elements.signinLink.addEventListener("click", function(e) {
 		e.preventDefault();
 		form.openModal(elements.signinForm);
@@ -48,12 +54,111 @@ INDEX.methods.addEvents = function() {
 		e.preventDefault();
 		form.openModal(elements.signupForm);
 	});
-	elements.signupFormFields.addEventListener("keyup", form.validateSignUpForm);
-	elements.signupFormFields.addEventListener("blur", form.validateSignUpForm, true);
-	elements.signinFormFields.addEventListener("keyup", form.confirmSigninSubmittable);
-	elements.signinFormFields.addEventListener("blur", form.confirmSigninSubmittalble, true);
+	elements.signupFormFields
+			.addEventListener("keyup", form.validateSignUpForm);
+	elements.signupFormFields.addEventListener("blur", form.validateSignUpForm,
+			true);
+	elements.signinFormFields.addEventListener("keyup",
+			form.confirmSigninSubmittable);
+	elements.signinFormFields.addEventListener("blur",
+			form.confirmSigninSubmittalble, true);
+
+	elements.signinForm.addEventListener("submit", form.submitSigninForm);
+	elements.signupForm.addEventListener("submit", form.submitSignupForm);
 }
 INDEX.form = INDEX.form || {};
+INDEX.form.encryptInput = function(sValue, sPubKey) {
+	var encrypt = new JSEncrypt();
+	encrypt.setPublicKey(sPubKey);
+	return encrypt.encrypt(sValue);
+}
+INDEX.form.submitSignupForm = function(e) {
+	e.preventDefault();
+	var util = CANDRUN.util;
+	var form = INDEX.form;
+	var elements = INDEX.elements;
+	var sPubKey = elements.pubKeyInput.value;
+	var fEncryptor = INDEX.form.encryptInput;
+	var sEncryptedEmail = fEncryptor(elements.signupEmailInput.value, sPubKey);
+	var sEncryptedPw = fEncryptor(elements.signupPwInput.value, sPubKey);
+//	var sEncryptedEmail = fEncryptor(elements.signupEmailInput.value, sPubKey).replace(/\+/g, '%2B');
+//	var sEncryptedPw = fEncryptor(elements.signupPwInput.value, sPubKey).replace(/\+/g, '%2B');
+//	var ajax = new util.ajax("/users", form.checkSignUpResult);
+//	var params = "email="
+//			+ sEncryptedEmail
+//			+ "&password=" + sEncryptedPw
+//			+ "&nickname=" + elements.signupNickInput.value;
+//	ajax.setMethod("POST");
+//	ajax.open();
+//	ajax.setJson();
+//	ajax.readyParam();
+//	ajax.send(params);
+	
+	
+	var ajax = new util.ajaxFormData("/users", form.checkSignUpResult);
+	var formData = new FormData();
+	formData.append("pic", elements.signFileInput.files[0]);
+	formData.append("email", sEncryptedEmail);
+	formData.append("password", sEncryptedPw);
+	formData.append("nickname", elements.signupNickInput.value);
+	ajax.setMethod("post");
+	ajax.open();
+	ajax.setJson();
+	ajax.send(formData);
+	
+}
+INDEX.form.checkSignUpResult = function(sResp) {
+	var oReturnMsg = {};
+	oReturnMsg = JSON.parse(sResp);
+
+	if (oReturnMsg.returnMsg === "dup") {
+		alert("동일한 E-mail이 존재합니다.");
+		return;
+	}
+	if (oReturnMsg.returnMsg === "success") {
+		alert("이메일 인증을 하셔야 회원가입이 완료 됩니다.")
+		location.replace("/");
+	}
+}
+INDEX.form.submitSigninForm = function(e) {
+	e.preventDefault();
+	var util = CANDRUN.util;
+	var form = INDEX.form;
+	var elements = INDEX.elements;
+	var sPubKey = elements.pubKeyInput.value;
+	var fEncryptor = INDEX.form.encryptInput;
+	var sEncryptedEmail = fEncryptor(elements.signinEmailInput.value, sPubKey).replace(/\+/g, '%2B');
+	var sEncryptedPw = fEncryptor(elements.signinPwInput.value, sPubKey).replace(/\+/g, '%2B');
+	var ajax = new util.ajax("/auth", form.checkLoginResult);
+	var params = "email="
+			+ sEncryptedEmail
+			+ "&password=" + sEncryptedPw;
+	ajax.setMethod("POST");
+	ajax.open();
+	ajax.setJson();
+	ajax.readyParam();
+	ajax.send(params);	
+}
+INDEX.form.checkLoginResult = function(sResp) {
+	var oReturnMsg = {};
+	oReturnMsg = JSON.parse(sResp);
+
+	if (oReturnMsg.returnMsg === "empty") {
+		alert("존재하지 않는 E-mail 입니다.");
+		return;
+	}
+	if (oReturnMsg.returnMsg === "wrongPw") {
+		alert("잘못된 비밀번호 입니다.");
+		return;
+	}
+	if (oReturnMsg.returnMsg === "notYetCerti") {
+		alert("E-mail 인증이 진행되지 않았습니다.");
+		return;
+	}
+	if (oReturnMsg.returnMsg === "success") {
+		location.replace("/");
+	}
+}
 INDEX.form.validateSignUpForm = function(e) {
 	var util = CANDRUN.util;
 	var elements = INDEX.elements;
@@ -63,35 +168,42 @@ INDEX.form.validateSignUpForm = function(e) {
 	var fValidator;
 
 	switch (e.target.id) {
-		case "input-1-1":
-			elTarget = elements.signupEmailRep;
-			fValidator = util.isValidateEmail;
-			break;
-		case "input-1-3":
-			elTarget = elements.signupPwRep;
-			fValidator = util.isValidatePW;
-			break;
-		case "input-1-4":
-			elTarget = elements.signupConPwRep;
-			form.validateConPW(elTarget, elements.signupPwInput.value, e.target.value);
-			form.confirmSignupSubmittable();
-			return;
-		default:
-			return;
-	}
-	if (keyCode != 13) {
-		form.validateInput(elTarget, e.target.value, fValidator);
+	case "input-1-1":
+		elTarget = elements.signupEmailRep;
+		fValidator = util.isValidateEmail;
+		break;
+	case "input-1-3":
+		elTarget = elements.signupPwRep;
+		fValidator = util.isValidatePW;
+		if (elements.signupConPwInput.value) {
+			form.validateConPW(elements.signupConPwRep, elements.signupConPwInput.value,
+					e.target.value);
+		}
+		break;
+	case "input-1-4":
+		elTarget = elements.signupConPwRep;
+		form.validateConPW(elTarget, elements.signupPwInput.value,
+				e.target.value);
+		form.confirmSignupSubmittable();
+		return;
+	default:
 		form.confirmSignupSubmittable();
 		return;
 	}
+		form.validateInput(elTarget, e.target.value, fValidator);
+		form.confirmSignupSubmittable();
+		return;
 }
 INDEX.form.confirmSignupSubmittable = function() {
 	var elements = INDEX.elements;
-	if (!elements.signupEmailInput.value || !elements.signupNickInput.value || !elements.signupPwInput.value || !elements.signupConPwInput.value) {
+	if (!elements.signupEmailInput.value || !elements.signupNickInput.value
+			|| !elements.signupPwInput.value
+			|| !elements.signupConPwInput.value) {
 		elements.signupSubmit.disabled = true;
 		return;
 	}
-	if (elements.signupEmailRep.innerHTML || elements.signupPwRep.innerHTML || elements.signupConPwRep.innerHTML) {
+	if (elements.signupEmailRep.innerHTML || elements.signupPwRep.innerHTML
+			|| elements.signupConPwRep.innerHTML) {
 		elements.signupSubmit.disabled = true;
 		return;
 	}

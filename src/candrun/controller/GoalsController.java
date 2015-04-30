@@ -22,11 +22,9 @@ import candrun.model.Task;
 public class GoalsController {
 	private static final Logger LOGGER = LoggerFactory.getLogger(TasksController.class);
 
-	@Autowired
-	GoalDAO goalDao;
+	@Autowired GoalDAO goalDao;
 
-	@Autowired
-	TaskDAO taskDao;
+	@Autowired TaskDAO taskDao;
 
 	@RequestMapping(method = RequestMethod.POST)
 	public Object create(@RequestParam("goal_contents") String goalContents, HttpServletRequest req) {
@@ -36,12 +34,13 @@ public class GoalsController {
 		// TODO: 요청 보내는 front코드와 함께 리팩토링 필요,
 		for (int i = 0; i < 5; i++) {
 			String taskContents = req.getParameter("task_contents_" + i);
+			LOGGER.info("task: {}",taskContents);
 			if (taskContents == null) {
 				break;
-			}
+			}	
 			arrTaskContents.add(taskContents);
 		}
-		Goal goal = new Goal(goalContents, "email");
+		Goal goal = new Goal(goalContents, "javajava@naver.com");
 		int returnedId = goalDao.addGoal(goal);
 
 		for (int i = 0; i < arrTaskContents.size(); i++) {

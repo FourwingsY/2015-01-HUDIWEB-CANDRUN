@@ -14,6 +14,56 @@ CANDRUN.enums.pwConMsg = {
 }
 
 CANDRUN.util = {};
+CANDRUN.util.ajaxFormData = function(sUrl, fSuccess, fFail) {
+	var httpRequest;
+	var method = 'GET';
+
+	this.setJson = function() {
+		 httpRequest.setRequestHeader('Accept', 'application/json');
+	}
+	this.readyParam = function() {
+		 httpRequest.setRequestHeader("Content-type","application/x-www-form-urlencoded");
+	}
+	this.setMethod = function(sMethod) {
+		method = sMethod;
+	}
+	this.open = function() {
+		httpRequest.open(method, sUrl);
+	}
+	//send 메소드에 params 추가.
+	this.send = function(params) {
+		httpRequest.send(params);
+	}	
+	
+	if (window.XMLHttpRequest) {
+		httpRequest = new XMLHttpRequest();
+	} else if (window.ActiveXObject) {
+		try {
+			httpRequest = new ActiveXObject("Msxml2.XMLHTTP");
+		} catch (e) {
+			try {
+				httpRequest = new ActiveXObject("Microsoft.XMLHTTP");
+			} catch (e) {
+			}
+		}
+	}
+	if (!httpRequest) {
+		console.log('Giving up :( Cannot create an XMLHTTP instance');
+		return false;
+	}
+	httpRequest.onreadystatechange = function() {
+		if (httpRequest.readyState === 4) {
+			if (httpRequest.status === 200) {
+				fSuccess(httpRequest.responseText);
+			} else {
+				if (fFail) {
+					fFail();
+				}
+			}
+		}
+	}
+	
+}
 //사용 예시
 //var myAjax = new CANDRUN.util.ajax("http://candrun.com/user", function() {console.log("success");}, function() {console.log("fail");});
 //헤더를 json으로 - option
@@ -27,6 +77,9 @@ CANDRUN.util.ajax = function(sUrl, fSuccess, fFail) {
 	var method = 'GET';
 
 	this.setJson = function() {
+		 httpRequest.setRequestHeader('Accept', 'application/json');
+	}
+	this.readyParam = function() {
 		 httpRequest.setRequestHeader("Content-type","application/x-www-form-urlencoded");
 	}
 	this.setMethod = function(sMethod) {
@@ -70,6 +123,9 @@ CANDRUN.util.ajax = function(sUrl, fSuccess, fFail) {
 }
 CANDRUN.util.querySelector = function(el) {
 	return document.querySelector(el);
+}
+CANDRUN.util.querySelectorAll = function(el){
+	return document.querySelectorAll(el);
 }
 CANDRUN.util.addClass = function(elTarget, sClass) {
 	elTarget.className += " " + sClass;
@@ -121,4 +177,7 @@ CANDRUN.util.getKeyCode = function(e) {
 		return e.which;
 	}
 	return keyCode = e.keyCode;
+}
+CANDRUN.util.replacePage = function(sUrl) {
+	location.replace(sUrl);
 }
